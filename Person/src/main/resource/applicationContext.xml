@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+
+<!-- 加载配置文件 *.properties -->
+    <context:property-placeholder
+            location="classpath:jdbc.properties"/>
+
+    <!--配置数据库 dataSource -->
+    <bean id="dataSource"
+          class="com.alibaba.druid.pool.DruidDataSource">
+        <!-- 加载数据库用户名 -->
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <!-- 加载数据库密码 -->
+        <property name="url" value="${jdbc.url}"/>
+        <!-- 加载数据库连接 -->
+        <property name="username" value="${jdbc.username}"/>
+        <!-- 加载数据库驱动 -->
+        <property name="password" value="${jdbc.password}"/>
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${jdbc.maxPoolSize}"/>
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${jdbc.minPoolSize}"/>
+        <!--数据库等待时间-->
+        <property name="maxWait" value="${jdbc.maxWaitTime}"/>
+        <!--检测数据库连接是否超时 -->
+        <property name="removeAbandoned" value="${jdbc.removeAbandoned}"/>
+        <!--配合检测是否超时使用 如果超过该时间 直接关闭连接-->
+        <property name="removeAbandonedTimeout" value="${jdbc.removeAbandonedTime}"/>
+    </bean>
+
+    <!-- 配置sqlsessioFactory -->
+    <bean id="sqlSessionFactoryBean"
+          class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 配置数据源 引用（ref）dataSource（bean） -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 加载mybatis 配置文件 -->
+        <property name="configLocation"
+                  value="classpath:mybatis.xml"/>
+        <property name="mapperLocations" value="classpath:com/bdqn/mapper/*Mapper.xml"/>
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!--使用下面的方式配置参数，一行配置一个-->
+                        <value>
+                            offsetAsPageNum=true
+                            rowBoundsWithCount=true
+                            pageSizeZero=true
+                            reasonable
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+    <!-- 配置扫描包 加载mapper代理对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 扫描mapper路径 -->
+        <property name="basePackage" value="com.bdqn.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"/>
+    </bean>
+
+    <!-- 扫描Service包 -->
+    <context:component-scan base-package="com.bdqn.service"/>
+
+</beans>
